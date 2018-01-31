@@ -3,14 +3,13 @@ import torch
 from torch import nn
 from torch.autograd import Variable
 
-from ntm import NTM
-from controller import LSTMController
-from head import NTMReadHead, NTMWriteHead
-from memory import NTMMemory
+from .ntm import NTM
+from .controller import LSTMController
+from .head import NTMReadHead, NTMWriteHead
+from .memory import NTMMemory
 
 
 class EncapsulatedNTM(nn.Module):
-
     def __init__(self, num_inputs, num_outputs,
                  controller_size, controller_layers, num_heads, N, M):
         """Initialize an EncapsulatedNTM.

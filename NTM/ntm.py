@@ -3,7 +3,6 @@ from torch import nn
 from torch.autograd import Variable
 import torch.nn.functional as F
 
-
 class NTM(nn.Module):
     """A Neural Turing Machine."""
     def __init__(self, num_inputs, num_outputs, controller, memory, heads):

@@ -39,7 +39,7 @@ class NTMMemory(nn.Module):
         # The memory bias allows the heads to learn how to initially address
         # memory locations by content
         self.mem_bias = Variable(torch.Tensor(N, M))
-        self.register_buffer('mem_bias', self.mem_bias.data)
+        self.register_buffer('mem_bias_bis', self.mem_bias.data)
 
         # Initialize memory bias
         stdev = 1 / (np.sqrt(N + M))

@@ -4,7 +4,6 @@ from torch import nn
 from torch.nn import Parameter
 import numpy as np
 
-
 class LSTMController(nn.Module):
     """An NTM controller based on LSTM."""
     def __init__(self, num_inputs, num_outputs, num_layers):

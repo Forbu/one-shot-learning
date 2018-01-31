@@ -37,8 +37,12 @@ import argparse
 
 from torch.autograd import Variable
 
+def one_hot_v2(batch,depth):
+    ones = torch.sparse.torch.eye(depth)
+    return ones.index_select(0,batch)
+
 # We import the dataset omniglot
-directory_main = "/Users/adrienbufort/Downloads/omniglot-master/python/images_background_small1"
+directory_main = "/Users/adrienbufort/projects/one-shot-learning/data/images_background_small1"
 
 # we create the dataset :
 list_alphabect = listdir(directory_main)
@@ -71,7 +75,7 @@ print(data)
 # load and look one image :
 import imageio
 
-im = imageio.imread('/Users/adrienbufort/Downloads/omniglot-master/python/images_background/Balinese/character05/0112_05.png')
+im = imageio.imread('/Users/adrienbufort/projects/one-shot-learning/data/images_background/Balinese/character05/0112_05.png')
 print(im.shape)
 
 # dataset of 20000 image in pytorch tensor
@@ -82,25 +86,98 @@ for data_index in data:
     
 # 20 000 image 
 #%% transforming the dataset into a continuous one with data transform
-example_image = data_image[0][0].float()
-example_image = example_image / 255
-example_image = example_image.view(1,105,105)
-example_image = example_image.unsqueeze(0)
-print("example : ",example_image)
-
-#%%
+import torch
+import torch.nn as nn
 from models_one_shot import One_shot_classifier
-model = One_shot_classifier(n_output=10)
-result = model(example_image,0)
+from torch.autograd import Variable
 
 
+params = {}
+params['input_controller_size'] = 2049
+params['number_of_classes'] = 15
+params['controller_output_size'] = 10  
+params['controller_layer_size'] = 1
+params['num_heads'] = 1
+params['N'] = 64
+params['M'] = 100
 
+model = One_shot_classifier(params['number_of_classes'],
+                            params['controller_output_size'],params['controller_layer_size'],
+                            params['num_heads'],params['N'],params['M'])
+                            
+import random 
+n_episode = 30000
 
+length_episode = 100
 
+def get_episode(data_image_):
+    # creating on the dataset from data_image :
+    indexs = list(map(lambda x :x[1],data_image_))
+    max_indexs = max(indexs)
+    
+    index_choosen = np.random.randint(1,max_indexs,15)
+    data_image_selected = list(filter(lambda x: x[1] in index_choosen,data_image_))
+    
 
+    
+    random.shuffle(data_image_selected)
+    data_image_selected = data_image_selected[:100]
+    
+    # now we change the label
+    images = list(map(lambda x: x[0].view(1,1,105,105).float(),data_image_selected))
+    
+    labels = list(map(lambda x: x[1],data_image_selected))
+    labels = list(map(lambda x: list(index_choosen).index(x),labels))
+    
+    images = torch.cat(images)
+    images = images / 255
+    
+    # convertion of label towards hot auto encoder
+    labels = torch.LongTensor(labels)
 
+    lables_hot = one_hot_v2(labels,params['number_of_classes'])
 
+    return Variable(images),Variable(lables_hot)
 
+X,Y = get_episode(data_image)
 
+# optimizer 
+optimizer = optim.RMSprop(model.parameters(),
+                             momentum=0.9,
+                             alpha=0.95,
+                             lr=1e-4)
+
+# loss
+criterion = nn.BCELoss()
+
+# training scession
+for episode in range(n_episode):
+    print("episode numero : ",episode)
+    X,Y = get_episode(data_image)
+    
+    # memory matrix to null
+    model.NTM_layer.init_sequence(1)
+    
+    y_out = Variable(torch.zeros(Y.size()))
+    
+    # first initialisation
+    print(X[0,:,:,:].unsqueeze(0))
+    null_var = Variable(torch.FloatTensor(1,params['number_of_classes']).zero_())
+    null_var[0,0] = 1
+    
+    y_out[0] = model(X[0,:,:,:].unsqueeze(0),null_var)
+    
+    for i in range(1,length_episode):
+        
+        y_out[i,:] = model(X[i,:,:,:].unsqueeze(0),Y[i-1,:].unsqueeze(0))
+        
+    try:
+        loss = criterion(y_out, Y)
+        loss.backward()
+
+        optimizer.step()
+    except:
+        print("error")
+    
 
 
