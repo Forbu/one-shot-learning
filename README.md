@@ -19,6 +19,8 @@ I (strongly) inspire myself from :
 https://github.com/loudinthecloud/pytorch-ntm (github repo)
 for the NTM implementation (that I modify to create the one-shot learning framework with Least Recently Used Access feature).
 
+Also there is another reference repo which code the DNC net (https://github.com/xdever/pytorch-dnc) using pytorch.
+
 The original paper on one shot learning using the same initial dataset (paper) :
 https://arxiv.org/pdf/1605.06065.pdf
 
