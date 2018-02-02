@@ -28,9 +28,6 @@ import torch.optim as optim
 import torch.nn.functional as F
 import torch.backends.cudnn as cudnn
 
-import torchvision
-import torchvision.transforms as transforms
-
 import os
 from os import listdir
 import argparse
@@ -42,7 +39,7 @@ def one_hot_v2(batch,depth):
     return ones.index_select(0,batch)
 
 # We import the dataset omniglot
-directory_main = "/Users/adrienbufort/projects/one-shot-learning/data/images_background_small1"
+directory_main = "./data/images_background_small1"
 
 # we create the dataset :
 list_alphabect = listdir(directory_main)
@@ -75,17 +72,12 @@ print(data)
 # load and look one image :
 import imageio
 
-im = imageio.imread('/Users/adrienbufort/projects/one-shot-learning/data/images_background/Balinese/character05/0112_05.png')
-print(im.shape)
-
 # dataset of 20000 image in pytorch tensor
 data_image = []
 for data_index in data:
     im = torch.from_numpy(imageio.imread(directory_main + '/' + data_index[1]))
     data_image.append((im,data_index[0]))
     
-# 20 000 image 
-#%% transforming the dataset into a continuous one with data transform
 import torch
 import torch.nn as nn
 from models_one_shot import One_shot_classifier
@@ -93,8 +85,9 @@ from torch.autograd import Variable
 
 
 params = {}
-params['input_controller_size'] = 2049
+
 params['number_of_classes'] = 15
+params['input_controller_size'] = 128
 params['controller_output_size'] = 10  
 params['controller_layer_size'] = 1
 params['num_heads'] = 1
@@ -106,9 +99,15 @@ model = One_shot_classifier(params['number_of_classes'],
                             params['num_heads'],params['N'],params['M'])
                             
 import random 
-n_episode = 30000
+n_episode = 50000
 
 length_episode = 100
+
+def clip_grads(net):
+    """Gradient clipping to the range [10, 10]."""
+    parameters = list(filter(lambda p: p.grad is not None, net.parameters()))
+    for p in parameters:
+        p.grad.data.clamp_(-10, 10)
 
 def get_episode(data_image_):
     # creating on the dataset from data_image :
@@ -174,10 +173,13 @@ for episode in range(n_episode):
     try:
         loss = criterion(y_out, Y)
         loss.backward()
-
+        clip_grads(model)
         optimizer.step()
     except:
         print("error")
+    
+    if episode == 0 % 1000:
+         torch.save(model,'NTM_model' + str(episode) + '.pt')
     
 
 
