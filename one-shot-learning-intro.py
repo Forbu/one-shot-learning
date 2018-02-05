@@ -151,6 +151,7 @@ criterion = nn.BCELoss()
 
 # training scession
 for episode in range(n_episode):
+    optimizer.zero_grad()
     print("episode numero : ",episode)
     X,Y = get_episode(data_image)
     
@@ -175,10 +176,11 @@ for episode in range(n_episode):
         loss.backward()
         clip_grads(model)
         optimizer.step()
+        
     except:
         print("error")
     
-    if episode == 0 % 1000:
+    if (episode == 0) % 1000:
          torch.save(model,'NTM_model' + str(episode) + '.pt')
     
 
