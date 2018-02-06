@@ -39,7 +39,7 @@ def one_hot_v2(batch,depth):
     return ones.index_select(0,batch)
 
 # We import the dataset omniglot
-directory_main = "./data/images_background_small1"
+directory_main = "./data/images_background"
 
 # we create the dataset :
 list_alphabect = listdir(directory_main)
@@ -72,12 +72,9 @@ print(data)
 # load and look one image :
 import imageio
 
-# dataset of 20000 image in pytorch tensor
-data_image = []
-for data_index in data:
-    im = torch.from_numpy(imageio.imread(directory_main + '/' + data_index[1]))
-    data_image.append((im,data_index[0]))
-    
+n_images = len(data)
+print(n_images)
+#%%    
 import torch
 import torch.nn as nn
 from models_one_shot import One_shot_classifier
@@ -109,16 +106,19 @@ def clip_grads(net):
     for p in parameters:
         p.grad.data.clamp_(-10, 10)
 
-def get_episode(data_image_):
-    # creating on the dataset from data_image :
-    indexs = list(map(lambda x :x[1],data_image_))
+def get_episode(data_repo):
+    
+    indexs = list(map(lambda x :x[0],data_repo))
     max_indexs = max(indexs)
     
     index_choosen = np.random.randint(1,max_indexs,15)
-    data_image_selected = list(filter(lambda x: x[1] in index_choosen,data_image_))
+    data_repo_selected = list(filter(lambda x: x[0] in index_choosen,data_repo))
     
-
-    
+    data_image_selected = []
+    for data_index in data_repo_selected:
+        im = torch.from_numpy(imageio.imread(directory_main + '/' + data_index[1]))
+        data_image_selected.append((im,data_index[0]))
+        
     random.shuffle(data_image_selected)
     data_image_selected = data_image_selected[:100]
     
@@ -138,7 +138,9 @@ def get_episode(data_image_):
 
     return Variable(images),Variable(lables_hot)
 
-X,Y = get_episode(data_image)
+#X,Y = get_episode(data)
+
+#%%
 
 # optimizer 
 optimizer = optim.RMSprop(model.parameters(),
@@ -153,7 +155,7 @@ criterion = nn.BCELoss()
 for episode in range(n_episode):
     optimizer.zero_grad()
     print("episode numero : ",episode)
-    X,Y = get_episode(data_image)
+    X,Y = get_episode(data)
     
     # memory matrix to null
     model.NTM_layer.init_sequence(1)
@@ -180,8 +182,15 @@ for episode in range(n_episode):
     except:
         print("error")
     
-    if (episode == 0) % 1000:
+    if (episode % 2000) == 0:
          torch.save(model,'NTM_model' + str(episode) + '.pt')
+         
+# TODO performance training
+         
+         
+         
+         
+
     
 
 
