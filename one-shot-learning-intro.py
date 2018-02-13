@@ -79,7 +79,7 @@ import torch
 import torch.nn as nn
 from models_one_shot import One_shot_classifier
 from torch.autograd import Variable
-
+from models_one_shot import One_shot_classifier
 
 params = {}
 
@@ -96,7 +96,7 @@ model = One_shot_classifier(params['number_of_classes'],
                             params['num_heads'],params['N'],params['M'])
                             
 import random 
-n_episode = 50000
+n_episode = 100000
 
 length_episode = 100
 
@@ -149,8 +149,9 @@ optimizer = optim.RMSprop(model.parameters(),
                              lr=1e-4)
 
 # loss
-criterion = nn.BCELoss()
+criterion = nn.NLLLoss()
 
+#%%
 # training scession
 for episode in range(n_episode):
     optimizer.zero_grad()
@@ -160,12 +161,15 @@ for episode in range(n_episode):
     # memory matrix to null
     model.NTM_layer.init_sequence(1)
     
-    y_out = Variable(torch.zeros(Y.size()))
+    y_out = Variable(torch.zeros(Y.size())) + 1e-15
     
     # first initialisation
     print(X[0,:,:,:].unsqueeze(0))
-    null_var = Variable(torch.FloatTensor(1,params['number_of_classes']).zero_())
+    null_var = Variable(torch.FloatTensor(1,params['number_of_classes']).zero_()) + + 1e-15
     null_var[0,0] = 1
+    
+    null_var = torch.log(null_var)
+    Y = torch.log(Y)
     
     y_out[0] = model(X[0,:,:,:].unsqueeze(0),null_var)
     
@@ -178,15 +182,12 @@ for episode in range(n_episode):
         loss.backward()
         clip_grads(model)
         optimizer.step()
-        
+        print(loss)
     except:
         print("error")
     
     if (episode % 2000) == 0:
-         torch.save(model,'NTM_model' + str(episode) + '.pt')
-         
-# TODO performance training
-         
+         torch.save(model,'modelweight/NTM_model' + str(episode) + '.pt')
          
          
          

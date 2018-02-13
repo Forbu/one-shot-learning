@@ -1,25 +1,14 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-from __future__ import print_function
 """
-Created on Wed Jan 24 14:10:19 2018
+Created on Tue Feb 13 16:42:59 2018
 
-@author: adrienbufort
-"""
-
-"""
-One-shot learning testing with transfert learning
-on CIFAR dataset
-
-First step
-    -> get neural transfert from classic dataset (cifar 10 or 10)
-    -> get the data until fully connected layer
-    -> add the memory layer (the one shot layer)
-    -> train some part of the dataset (exemple 5 images)
-
+@author: 2622792
 """
 
-# import the CIFAR dataset
+"""
+Testing
+"""
+
 import numpy as np
 
 import torch
@@ -33,6 +22,7 @@ from os import listdir
 import argparse
 
 from torch.autograd import Variable
+
 
 def one_hot_v2(batch,depth):
     ones = torch.sparse.torch.eye(depth)
@@ -77,32 +67,6 @@ print(n_images)
 #%%    
 import torch
 import torch.nn as nn
-from models_one_shot import One_shot_classifier_LRU
-
-params = {}
-
-params['number_of_classes'] = 15
-params['input_controller_size'] = 128
-params['controller_output_size'] = 10  
-params['controller_layer_size'] = 1
-params['num_heads'] = 1
-params['N'] = 64
-params['M'] = 100
-
-model = One_shot_classifier_LRU(params['number_of_classes'],
-                            params['controller_output_size'],params['controller_layer_size'],
-                            params['num_heads'],params['N'],params['M'])
-                            
-import random 
-n_episode = 100000
-
-length_episode = 100
-
-def clip_grads(net):
-    """Gradient clipping to the range [10, 10]."""
-    parameters = list(filter(lambda p: p.grad is not None, net.parameters()))
-    for p in parameters:
-        p.grad.data.clamp_(-10, 10)
 
 def get_episode(data_repo):
     
@@ -136,22 +100,22 @@ def get_episode(data_repo):
 
     return Variable(images),Variable(lables_hot)
 
-#X,Y = get_episode(data)
+params = {}
 
-#%%
+params['number_of_classes'] = 15
+params['input_controller_size'] = 128
+params['controller_output_size'] = 10  
+params['controller_layer_size'] = 1
+params['num_heads'] = 1
+params['N'] = 64
+params['M'] = 100
 
-# optimizer 
-optimizer = optim.RMSprop(model.parameters(),
-                             momentum=0.9,
-                             alpha=0.95,
-                             lr=1e-4)
 
-# loss
-criterion = nn.CrossEntropyLoss()
-
-# training scession
+model = torch.load("modelweight/NTM_model92000.pt")
+length_episode = 100
+n_episode = 1
 for episode in range(n_episode):
-    optimizer.zero_grad()
+
     print("episode numero : ",episode)
     X,Y = get_episode(data)
     
@@ -171,29 +135,9 @@ for episode in range(n_episode):
         
         y_out[i,:] = model(X[i,:,:,:].unsqueeze(0),Y[i-1,:].unsqueeze(0))
         
-    try:
-        loss = criterion(y_out, Y)
-        loss.backward()
-        clip_grads(model)
-        optimizer.step()
-        
-    except:
-        print("error")
-    
-    if (episode % 2000) == 0:
-         torch.save(model,'modelweight/NTM_model-LRU-' + str(episode) + '.pt')
-         
 
 
 
 
-         
-         
-         
-         
-         
-         
-         
-         
-         
-         
+
+
