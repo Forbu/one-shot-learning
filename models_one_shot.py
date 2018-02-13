@@ -98,7 +98,7 @@ class One_shot_classifier_LRU(nn.Module):
         """
         NTM modified layer for one shot learning :
         """
-        num_inputs = 8*8*8 + n_output
+        num_inputs = 288 + n_output
         
         self.NTM_layer = EncapsulatedNTM_LRU(num_inputs, n_output,
                  controller_size, controller_layers, num_heads, N, M)

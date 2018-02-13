@@ -149,7 +149,7 @@ optimizer = optim.RMSprop(model.parameters(),
                              lr=1e-4)
 
 # loss
-criterion = nn.NLLLoss()
+criterion = nn.BCELoss()
 
 #%%
 # training scession
@@ -161,30 +161,26 @@ for episode in range(n_episode):
     # memory matrix to null
     model.NTM_layer.init_sequence(1)
     
-    y_out = Variable(torch.zeros(Y.size())) + 1e-15
+    y_out = Variable(torch.zeros(Y.size()))
     
     # first initialisation
     print(X[0,:,:,:].unsqueeze(0))
-    null_var = Variable(torch.FloatTensor(1,params['number_of_classes']).zero_()) + + 1e-15
+    null_var = Variable(torch.FloatTensor(1,params['number_of_classes']).zero_())
     null_var[0,0] = 1
-    
-    null_var = torch.log(null_var)
-    Y = torch.log(Y)
-    
+
     y_out[0] = model(X[0,:,:,:].unsqueeze(0),null_var)
     
     for i in range(1,length_episode):
         
         y_out[i,:] = model(X[i,:,:,:].unsqueeze(0),Y[i-1,:].unsqueeze(0))
         
-    try:
-        loss = criterion(y_out, Y)
-        loss.backward()
-        clip_grads(model)
-        optimizer.step()
-        print(loss)
-    except:
-        print("error")
+
+    loss = criterion(y_out, Y)
+    loss.backward()
+    clip_grads(model)
+    optimizer.step()
+    print(loss)
+
     
     if (episode % 2000) == 0:
          torch.save(model,'modelweight/NTM_model' + str(episode) + '.pt')

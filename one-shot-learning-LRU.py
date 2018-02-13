@@ -147,7 +147,7 @@ optimizer = optim.RMSprop(model.parameters(),
                              lr=1e-4)
 
 # loss
-criterion = nn.CrossEntropyLoss()
+criterion = nn.BCELoss()
 
 # training scession
 for episode in range(n_episode):
@@ -179,7 +179,7 @@ for episode in range(n_episode):
         
     except:
         print("error")
-    
+    print("loss : ",loss.data)
     if (episode % 2000) == 0:
          torch.save(model,'modelweight/NTM_model-LRU-' + str(episode) + '.pt')
          

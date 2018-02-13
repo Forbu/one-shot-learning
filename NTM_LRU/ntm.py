@@ -102,7 +102,7 @@ class NTM(nn.Module):
 
         # Generate Output
         inp2 = torch.cat([controller_outp] + reads, dim=1)
-        o = F.log_softmax(self.fc(inp2), dim=1)
+        o = F.softmax(self.fc(inp2), dim=1)
 
         # Pack the current state
         state = (reads, controller_state, heads_states, weight_use)
