@@ -1,3 +1,6 @@
 data/*
 .DS_Store
 modelweight/*
+__pycache__/*
+NTM/__pycache__/*
+NTM_LRU/__pycache__/*
