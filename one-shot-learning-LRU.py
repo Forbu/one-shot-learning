@@ -161,7 +161,7 @@ for episode in range(n_episode):
     y_out = Variable(torch.zeros(Y.size()))
     
     # first initialisation
-    print(X[0,:,:,:].unsqueeze(0))
+
     null_var = Variable(torch.FloatTensor(1,params['number_of_classes']).zero_())
     null_var[0,0] = 1
     
@@ -176,7 +176,7 @@ for episode in range(n_episode):
         loss.backward()
         clip_grads(model)
         optimizer.step()
-        
+        print(y_out)
     except:
         print("error")
     print("loss : ",loss.data)
