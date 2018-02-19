@@ -39,7 +39,7 @@ class NTM(nn.Module):
                 init_r_bias = Variable(torch.randn(1, self.M) * 0.01)
                 self.register_buffer("read{}_bias".format(self.num_read_heads), init_r_bias.data)
                 self.init_r += [init_r_bias]
-                init_w_u = Variable(torch.ones(self.N)*1/self.N)
+                init_w_u = Variable(torch.zeros(self.N))
             
                 self.init_w_u += [init_w_u]
                 self.num_read_heads += 1
@@ -56,7 +56,6 @@ class NTM(nn.Module):
         init_w_u = [w_u.clone().repeat(batch_size, 1) for w_u in self.init_w_u]
         controller_state = self.controller.create_new_state(batch_size)
         heads_state = [head.create_new_state(batch_size) for head in self.heads]
-
 
         return init_r, controller_state, heads_state, init_w_u
 
@@ -81,7 +80,7 @@ class NTM(nn.Module):
         # Read/Write from the list of heads
         reads = []
         heads_states = []
-        weight_use = [w_u for w_u in prev_w_u]
+        weight_use = [w_u.clone() for w_u in prev_w_u]
         
         i = 0 
         for head, prev_head_state in zip(self.heads, prev_heads_states):

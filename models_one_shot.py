@@ -142,4 +142,32 @@ class One_shot_classifier_LRU(nn.Module):
         return result
 
 
+class One_shot_classifier_reduce(nn.Module):
+    def __init__(self,n_output,controller_size,controller_layers,num_heads,N,M):
+        super(One_shot_classifier_reduce, self).__init__()
+
+        # get the dimension output
+        """
+        NTM modified layer for one shot learning :
+        """
+        num_inputs = 400 + n_output
+        
+        self.NTM_layer = EncapsulatedNTM_LRU(num_inputs, n_output,
+                 controller_size, controller_layers, num_heads, N, M)
+
+        
+    def forward(self, images_t,label_t_1):
+
+
+        # transforming into 32 feature map of 8x8
+        images_t = images_t.view(-1, 400)
+        
+        # Aggregation of the representation layer and the label information 
+
+        aggregation = torch.cat((images_t, label_t_1),1)
+
+        result, previous_state = self.NTM_layer(aggregation)
+        return result
+
+
  
