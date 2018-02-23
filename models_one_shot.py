@@ -157,8 +157,6 @@ class One_shot_classifier_reduce(nn.Module):
 
         
     def forward(self, images_t,label_t_1):
-
-
         # transforming into 32 feature map of 8x8
         images_t = images_t.view(-1, 400)
         

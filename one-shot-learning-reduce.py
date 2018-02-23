@@ -110,7 +110,7 @@ def clip_grads(net):
     parameters = list(filter(lambda p: p.grad is not None, net.parameters()))
     for p in parameters:
         p.grad.data.clamp_(-10, 10)
-
+        
 def get_episode(data_repo,batch):
     
     data_all_image = torch.zeros((100,batch,20,20))
@@ -131,7 +131,8 @@ def get_episode(data_repo,batch):
             im = torch.from_numpy(image_numpy)
             
             data_image_selected.append((im,data_index[0]))
-            
+        
+        
         random.shuffle(data_image_selected)
         data_image_selected = data_image_selected[:100]
         
@@ -153,12 +154,10 @@ def get_episode(data_repo,batch):
     
     return Variable(data_all_image),Variable(data_all_label)
 
-#X,Y = get_episode(data,16)
+X,Y = get_episode(data,1)
 #%%
 # optimizer 
-optimizer = optim.RMSprop(model.parameters(),
-                             momentum=0.9,
-                             alpha=0.95,
+optimizer = optim.Adam(model.parameters(),
                              lr=1e-3)
 
 batch = 16
